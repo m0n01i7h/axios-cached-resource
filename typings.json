@@ -1,0 +1,18 @@
+{
+  "name": "axois-resource",
+  "dependencies": {},
+  "globalDependencies": {
+    "axios": "registry:dt/axios#0.9.1+20160629101425",
+    "bluebird": "registry:dt/bluebird#2.0.0+20160701023356",
+    "express": "registry:dt/express#4.0.0+20160317120654",
+    "express-serve-static-core": "registry:dt/express-serve-static-core#0.0.0+20160701212727",
+    "jasmine": "registry:dt/jasmine#2.2.0+20160621224255",
+    "karma": "registry:dt/karma#0.13.9+20160501125529",
+    "log4js": "registry:dt/log4js#0.0.0+20160608042355",
+    "mime": "registry:dt/mime#0.0.0+20160316155526",
+    "node": "registry:dt/node#6.0.0+20160621231320",
+    "qs": "registry:dt/qs#6.2.0+20160707010053",
+    "randomstring": "registry:dt/randomstring#1.1.4+20160509083842",
+    "serve-static": "registry:dt/serve-static#0.0.0+20160606155157"
+  }
+}
