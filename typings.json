@@ -1,6 +1,8 @@
 {
   "name": "axois-resource",
-  "dependencies": {},
+  "dependencies": {
+    "lodash": "registry:npm/lodash#4.0.0+20160723033700"
+  },
   "globalDependencies": {
     "axios": "registry:dt/axios#0.9.1+20160629101425",
     "bluebird": "registry:dt/bluebird#2.0.0+20160701023356",
