@@ -1,14 +1,14 @@
 import { ICollectionItem } from '../../lib/collections/collection';
-import { LocalStorageCollection } from '../../lib/collections/localStorageCollection';
+import { LocalStorageProvider } from '../../lib/collections/localStorageProvider';
 
 interface ITestCollectionItem extends ICollectionItem {
   id?: any;
   data: string;
 }
 
-describe('LocalStorageCollection', () => {
+describe('LocalStorageProvider', () => {
 
-  let collection = new LocalStorageCollection<ITestCollectionItem>('test', 'id');
+  let collection = new LocalStorageProvider<ITestCollectionItem>('test', 'id');
 
   describe('#save', () => {
 
@@ -97,7 +97,7 @@ describe('LocalStorageCollection', () => {
       collection.save(resource)
         .then(res => {
 
-          expect(res.$id).toBeUndefined();
+          expect(res.$id).toBeDefined();
           expect(res.id).toBe('12');
           expect(res.data).toBe(resource.data);
 
@@ -179,7 +179,7 @@ describe('LocalStorageCollection', () => {
         .then(res => {
 
           expect(res).not.toBe(resource);
-          expect(res.$id).toBeUndefined();
+          expect(res.$id).toBeDefined();
 
           done();
         });

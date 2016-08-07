@@ -1,5 +1,5 @@
 import './simple.spec';
 import './route-parser.spec';
-import './collections/localStorageCollection.save.spec';
-import './collections/localStorageCollection.find.spec';
-import './collections/localStorageCollection.saveAll.spec';
+import './providers/localStorageProvider.save.spec';
+import './providers/localStorageProvider.find.spec';
+import './providers/localStorageProvider.saveAll.spec';

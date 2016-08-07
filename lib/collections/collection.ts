@@ -1,6 +1,5 @@
 export interface ICollectionItem {
   $id?: any;
-  $pending?: 'find' | 'save' | 'update' | 'remove';
 }
 
 export abstract class Collection<T extends ICollectionItem> {

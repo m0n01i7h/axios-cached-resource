@@ -1,16 +1,16 @@
 import { ICollectionItem } from '../../lib/collections/collection';
-import { LocalStorageCollection } from '../../lib/collections/localStorageCollection';
+import { LocalStorageProvider } from '../../lib/collections/localStorageProvider';
 
 interface ITestCollectionItem extends ICollectionItem {
   id?: any;
   data: string;
 }
 
-describe('LocalStorageCollection', () => {
+describe('LocalStorageProvider', () => {
 
-  let collection = new LocalStorageCollection<ITestCollectionItem>('test', 'id');
+  let collection = new LocalStorageProvider<ITestCollectionItem>('test', 'id');
 
-  describe('#save', () => {
+  describe('#saveAll', () => {
 
     let resource: ITestCollectionItem;
 
@@ -21,7 +21,7 @@ describe('LocalStorageCollection', () => {
       };
     });
 
-    it('should save 1 object in items', (done) => {
+    it('should add 1 object in items', (done) => {
 
       let items: ITestCollectionItem[] = [{
         data: 'data1',
@@ -37,7 +37,7 @@ describe('LocalStorageCollection', () => {
         });
     });
 
-    it('should save 1 object in index', (done) => {
+    it('should add 1 object in index', (done) => {
 
       let items: ITestCollectionItem[] = [{
         data: 'data1',
@@ -53,7 +53,7 @@ describe('LocalStorageCollection', () => {
         });
     });
 
-    it('should save multiple objects in items', (done) => {
+    it('should add multiple objects in items', (done) => {
 
       let items: ITestCollectionItem[] = [
         { data: 'data1', },
@@ -70,7 +70,7 @@ describe('LocalStorageCollection', () => {
         });
     });
 
-    it('should save multiple objects in index', (done) => {
+    it('should add multiple objects in index', (done) => {
 
       let items: ITestCollectionItem[] = [
         { data: 'data1', },
@@ -113,6 +113,46 @@ describe('LocalStorageCollection', () => {
         });
     });
 
+    it('should remove 1 object in items', (done) => {
+
+      collection.saveAll([
+        { data: 'data1', },
+        { data: 'data2', },
+        { data: 'data3', },
+      ])
+        .then(items => {
+          items.splice(1, 1);
+          return collection.saveAll(items);
+        })
+        .then(res => {
+          let lsItems: ITestCollectionItem[] = JSON.parse(localStorage[`resource.${'test'}.items`]);
+
+          expect(lsItems.length).toBe(2);
+
+          done();
+        });
+    });
+
+    it('should remove 1 object in index', (done) => {
+
+      collection.saveAll([
+        { data: 'data1', },
+        { data: 'data2', },
+        { data: 'data3', },
+      ])
+        .then(items => {
+          items.splice(1, 1);
+          return collection.saveAll(items);
+        })
+        .then(res => {
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+
+          expect(lsIndex.length).toBe(2);
+
+          done();
+        });
+    });
+
     it('should overwrite 1 object in items', (done) => {
 
       collection.saveAll([{ data: 'data1', }])
@@ -137,6 +177,51 @@ describe('LocalStorageCollection', () => {
           let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
 
           expect(lsIndex.length).toBe(2);
+
+          done();
+        });
+    });
+
+    it('should add 1 object to items with non-default query', (done) => {
+      collection.saveAll([{ data: 'data1', }], '?a')
+        .then(items => {
+          items[0].data = 'data2';
+          return collection.saveAll(items);
+        })
+        .then(res => {
+          let lsItems: ITestCollectionItem[] = JSON.parse(localStorage[`resource.${'test'}.items`]);
+
+          expect(lsItems.length).toBe(1);
+
+          done();
+        });
+    });
+
+    it('should add 1 object to index with non-default query', (done) => {
+      collection.saveAll([{ data: 'data1', }], '?a')
+        .then(items => {
+          items[0].data = 'data2';
+          return collection.saveAll(items);
+        })
+        .then(res => {
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?a'];
+
+          expect(lsIndex.length).toBe(1);
+
+          done();
+        });
+    });
+
+    it('should add 1 object to default index with non-default query', (done) => {
+      collection.saveAll([{ data: 'data1', }], '?a')
+        .then(items => {
+          items[0].data = 'data2';
+          return collection.saveAll(items);
+        })
+        .then(res => {
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+
+          expect(lsIndex.length).toBe(1);
 
           done();
         });

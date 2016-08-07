@@ -3,7 +3,7 @@ import * as randomString from 'randomstring';
 
 import { Collection, ICollectionItem } from './collection';
 
-export class LocalStorageCollection<T extends ICollectionItem> extends Collection<T> {
+export class LocalStorageProvider<T extends ICollectionItem> extends Collection<T> {
 
   public findAll(query = '?') {
     const identities: any[]
@@ -28,9 +28,10 @@ export class LocalStorageCollection<T extends ICollectionItem> extends Collectio
       = JSON.parse(localStorage.getItem(`resource.${this.collection}.items`) || '[]');
     const identities = index['?'] = index['?'] || [];
 
+    this.updateItems(resource, items);
+
     _(identities).remove(identity =>
       (resource[this.identity] && resource[this.identity] === identity) || identity === resource.$id).commit();
-    this.updateItems(resource, items);
     identities.push(resource[this.identity] || resource.$id);
 
     localStorage.setItem(`resource.${this.collection}.items`, JSON.stringify(items));
@@ -68,6 +69,10 @@ export class LocalStorageCollection<T extends ICollectionItem> extends Collectio
       }
     });
 
+    if (query === '?') {
+      // TODO: remove all items not in resource collection
+    }
+
     localStorage.setItem(`resource.${this.collection}.items`, JSON.stringify(items));
     localStorage.setItem(`resource.${this.collection}.index`, JSON.stringify(index));
 
@@ -92,10 +97,7 @@ export class LocalStorageCollection<T extends ICollectionItem> extends Collectio
       _.assign(item, resource);
     }
 
-    if (resource[this.identity]) {
-      // remove localId from
-      delete resource.$id;
-    } else if (!resource.$id) {
+    if (!resource.$id) {
       // create localId if item has not UID yet.
       resource.$id = randomString.generate({ length: 12 });
     }
