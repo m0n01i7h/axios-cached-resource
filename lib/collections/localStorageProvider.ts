@@ -5,6 +5,9 @@ import { Collection, ICollectionItem } from './collection';
 
 export class LocalStorageProvider<T extends ICollectionItem> extends Collection<T> {
 
+  /**
+   * Get all items by index
+   */
   public findAll(query = '?') {
     const identities: any[]
       = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}')[query];
@@ -17,12 +20,18 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
       : []);
   }
 
+  /**
+   * Get single item by local $id or identity attr.
+   */
   public find(identity: any): Promise<T> {
     const items: T[] = JSON.parse(localStorage.getItem(`resource.${this.collection}.items`) || '[]');
     return Promise.resolve(_(items)
       .find(item => (item[this.identity] && item[this.identity] === identity) || item.$id === identity));
   }
 
+  /**
+   * Update or create item and its indexes.
+   */
   public save(resource: T): Promise<T> {
     const index: { [key: string]: any[] }
       = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}');
@@ -49,6 +58,9 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
     return Promise.resolve(resource);
   }
 
+  /**
+   * Update or create all items and indexes
+   */
   public saveAll(resources: T[], query = '?'): Promise<T[]> {
     const index: { [key: string]: any[] }
       = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}');
@@ -116,6 +128,9 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
     return Promise.resolve(resources);
   }
 
+  /**
+   * Removes resource from items and all indexes
+   */
   public remove(identity: any): Promise<void> {
     const index: { [key: string]: any[] }
       = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}');
@@ -148,6 +163,9 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
     return Promise.resolve();
   }
 
+  /**
+   * Update or create item in collection
+   */
   private updateItems(resource: T, collecttion: T[]) {
     // update existing item create or create new
     let item = _(collecttion).find(item =>
@@ -164,6 +182,9 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
     _.difference(_.keys(item), _.keys(resource)).forEach(key => delete item[key]);
   }
 
+  /**
+   * Update or create index for resource
+   */
   private updateIndex(resource: T, identities: any[]) {
     _(identities).remove(identity =>
       (resource[this.identity] && resource[this.identity] === identity) || identity === resource.$id).commit();
