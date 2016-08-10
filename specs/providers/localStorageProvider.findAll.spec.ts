@@ -88,6 +88,31 @@ describe('LocalStorageProvider', () => {
         ;
     });
 
+    it('sould fetch collection by predicate', (done) => {
+      collection.saveAll([
+        {
+          data: 'data1'
+        },
+        {
+          data: 'data2'
+        },
+        {
+          data: 'pata1'
+        },
+        {
+          data: 'pata1'
+        }
+      ])
+        .then(res => collection.findAll(item => item.data.indexOf('data') === 0))
+        .then(res => {
+
+          expect(res.length).toBe(2);
+
+          done();
+        })
+        ;
+    });
+
   });
 
 });

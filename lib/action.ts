@@ -14,7 +14,7 @@ export interface IActionOptions {
   /**
    * HTTP method
    */
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'get' | 'post' | 'put' | 'delete';
+  method?: 'get' | 'post' | 'put' | 'delete';
 
   /**
    * Url
@@ -66,13 +66,14 @@ export function Action(options: IActionOptions): PropertyDecorator {
       const request = _.assign({}, config, {
         method: options.method,
         url: url,
+        data: data,
         params: _({})
           .assign(params)
           .omit(_.keys(route.match(url)))
           .value() // without values passed as url params
       } as Axios.AxiosXHRConfig<{}>);
 
-      if (/^get$/i.test(options.method) && options.isCollection) {
+      if (options.method === 'get' && options.isCollection) {
 
         resource.$resource = this;
         resource.$pending = 'find';
@@ -92,12 +93,12 @@ export function Action(options: IActionOptions): PropertyDecorator {
         return resource;
       }
 
-      if (/^get$/i.test(options.method)) {
+      if (options.method === 'get') {
 
         resource.$resource = this;
         resource.$pending = 'find';
 
-        resource.$promise = metadata.collection.find(params[metadata.options.identity] || params['$id'])
+        resource.$promise = metadata.collection.find(params[metadata.options.identity])
           .then(item => {
             // avoid overwriting with local data
             if (resource.$pending) {
@@ -109,6 +110,7 @@ export function Action(options: IActionOptions): PropertyDecorator {
         resource.$httpPromise = axios.request(request as Axios.AxiosXHRConfig<{}>)
           .then(res => metadata.collection.save(res.data))
           .then(item => {
+            _.assign(resource, item);
             delete resource.$pending;
             return resource;
           });
@@ -116,21 +118,21 @@ export function Action(options: IActionOptions): PropertyDecorator {
         return resource;
       }
 
-      if (/^post$/i.test(options.method)) {
+      if (options.method === 'post') {
         resource.$resource = this;
         resource.$pending = 'save';
 
         return resource;
       }
 
-      if (/^put$/i.test(options.method)) {
+      if (options.method === 'put') {
         resource.$resource = this;
         resource.$pending = 'update';
 
         return resource;
       }
 
-      if (/^delete$/i.test(options.method)) {
+      if (options.method === 'delete') {
         resource.$resource = this;
         resource.$pending = 'remove';
 
@@ -159,4 +161,14 @@ export function Put(options: IActionOptions = {}): PropertyDecorator {
 export function Delete(options: IActionOptions = {}): PropertyDecorator {
   options.method = 'delete';
   return Action(options);
+}
+
+/**
+ * Removes all localOnly and metadata values
+ */
+function omitMetaData(resource: {}) {
+  return _({})
+    .assign(resource)
+    .omit(_.keys(resource).filter(key => _(key).startsWith('$')))
+    .value();
 }

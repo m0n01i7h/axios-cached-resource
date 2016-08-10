@@ -13,7 +13,7 @@ export abstract class Collection<T extends ICollectionItem> {
   /**
    * Fetch multiple resources by query string
    */
-  public abstract findAll(query?: string): Promise<T[]>;
+  public abstract findAll(query?: string | ((item: T) => boolean)): Promise<T[]>;
 
   /**
    * Fetch single resource by identity

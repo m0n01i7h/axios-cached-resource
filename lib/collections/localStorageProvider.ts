@@ -8,16 +8,21 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
   /**
    * Get all items by index
    */
-  public findAll(query = '?') {
-    const identities: any[]
-      = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}')[query];
+  public findAll(query: string | ((item: T) => boolean) = '?') {
     const items: T[]
       = JSON.parse(localStorage.getItem(`resource.${this.collection}.items`) || '[]');
+
+    if (_.isString(query)) {
+    const identities: any[]
+      = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}')[query];
 
     return Promise.resolve(identities
       ? items.filter(item => identities
         .some(identity => (item[this.identity] && item[this.identity] === identity) || item.$id === identity))
       : []);
+    } else {
+      return Promise.resolve(items.filter(query));
+    }
   }
 
   /**
