@@ -7,18 +7,20 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
 
   public findAll(query = '?') {
     const identities: any[]
-      = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}')[query] || [];
+      = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}')[query];
     const items: T[]
       = JSON.parse(localStorage.getItem(`resource.${this.collection}.items`) || '[]');
-    return Promise.resolve(identities.length
-      ? items.filter(item =>
-        identities.some(identity => item[this.identity] === identity || item.$id === identity))
-      : items);
+
+    return Promise.resolve(identities
+      ? items.filter(item => identities
+        .some(identity => (item[this.identity] && item[this.identity] === identity) || item.$id === identity))
+      : []);
   }
 
   public find(identity: any): Promise<T> {
     const items: T[] = JSON.parse(localStorage.getItem(`resource.${this.collection}.items`) || '[]');
-    return Promise.resolve(_(items).find(item => item[this.identity] === identity || item.$id === identity));
+    return Promise.resolve(_(items)
+      .find(item => (item[this.identity] && item[this.identity] === identity) || item.$id === identity));
   }
 
   public save(resource: T): Promise<T> {
@@ -29,10 +31,17 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
     const identities = index['?'] = index['?'] || [];
 
     this.updateItems(resource, items);
+    this.updateIndex(resource, identities);
 
-    _(identities).remove(identity =>
-      (resource[this.identity] && resource[this.identity] === identity) || identity === resource.$id).commit();
-    identities.push(resource[this.identity] || resource.$id);
+    // update all non-default indexes where this resource indexed
+    _(index).each((identities: any[], query: string) => {
+        if (
+          query === '?' ||
+          !_(identities)
+            .some(identity => (resource[this.identity] && resource[this.identity] === identity) || identity === resource.$id)
+        ) { return; }
+        this.updateIndex(resource, identities);
+    });
 
     localStorage.setItem(`resource.${this.collection}.items`, JSON.stringify(items));
     localStorage.setItem(`resource.${this.collection}.index`, JSON.stringify(index));
@@ -51,26 +60,54 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
       ? index[query] = []
       : null;
 
-    resources.forEach(resource => {
-      _(allIdentities).remove(identity =>
-        (resource[this.identity] && resource[this.identity] === identity) || identity === resource.$id).commit();
-
-      if (identities) {
-        _(identities).remove(identity =>
-          (resource[this.identity] && resource[this.identity] === identity) || identity === resource.$id).commit();
-      }
-
-      this.updateItems(resource, items);
-
-      allIdentities.push(resource[this.identity] || resource.$id);
-
-      if (identities) {
-        identities.push(resource[this.identity] || resource.$id);
-      }
-    });
+    // compact
 
     if (query === '?') {
-      // TODO: remove all items not in resource collection
+
+      allIdentities.splice(0);
+
+      // remove all items not existing in passed resources
+      _(items)
+        .remove(item => !_(resources).some((resource: T) => (resource[this.identity] && resource[this.identity] === item[this.identity]) || resource.$id === item.$id))
+        .commit();
+    } else {
+
+      let indexedIdentities = [];
+
+      _(index).each((identities: any[], query: string) => {
+        if (query === '?') { return; }
+
+        indexedIdentities.push(...identities);
+      });
+
+      indexedIdentities = _(indexedIdentities).uniqBy(identity => identity).value();
+
+      // remove all not indexed items
+      _(items)
+        .remove(item => !_(indexedIdentities).some(identity => (item[this.identity] && item[this.identity] === identity) || identity === item.$id))
+        .commit();
+
+      // remove all non indexed identities
+      _(allIdentities)
+        .remove(identity => !_(indexedIdentities).some(indexed => indexed === identity))
+        .commit();
+    }
+
+    // create or update items
+    resources.forEach(resource => {
+
+      this.updateItems(resource, items);
+      this.updateIndex(resource, allIdentities);
+
+      if (identities) {
+        this.updateIndex(resource, identities);
+      }
+
+    });
+
+    // delete empty non-default index
+    if (identities && identities.length === 0) {
+      delete index[query];
     }
 
     localStorage.setItem(`resource.${this.collection}.items`, JSON.stringify(items));
@@ -80,10 +117,35 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
   }
 
   public remove(identity: any): Promise<void> {
-    return Promise
-      .resolve()
-      .then(() => localStorage.removeItem(`resource.${this.collection}.${identity}`))
-      ;
+    const index: { [key: string]: any[] }
+      = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}');
+    const items: T[]
+      = JSON.parse(localStorage.getItem(`resource.${this.collection}.items`) || '[]');
+
+    // remove from items
+    _(items)
+      .remove(item => (item[this.identity] && item[this.identity] === identity) || item.$id === identity)
+      .commit();
+
+    // remove from all indexes
+    _(index).each((identities: any[]) => {
+      _(identities)
+        .remove(id => identity === id)
+        .commit();
+    });
+
+    // remove all empty indexes
+    _(index)
+      .keys()
+      .forEach(key => {
+        if (key === '?' || index[key].length) { return; }
+        delete index[key];
+      });
+
+    localStorage.setItem(`resource.${this.collection}.items`, JSON.stringify(items));
+    localStorage.setItem(`resource.${this.collection}.index`, JSON.stringify(index));
+
+    return Promise.resolve();
   }
 
   private updateItems(resource: T, collecttion: T[]) {
@@ -97,12 +159,15 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
       _.assign(item, resource);
     }
 
-    if (!resource.$id) {
-      // create localId if item has not UID yet.
-      resource.$id = randomString.generate({ length: 12 });
-    }
+    resource.$id = resource.$id || randomString.generate({ length: 24 });
 
     _.difference(_.keys(item), _.keys(resource)).forEach(key => delete item[key]);
+  }
+
+  private updateIndex(resource: T, identities: any[]) {
+    _(identities).remove(identity =>
+      (resource[this.identity] && resource[this.identity] === identity) || identity === resource.$id).commit();
+    identities.push(resource[this.identity] || resource.$id);
   }
 
 }

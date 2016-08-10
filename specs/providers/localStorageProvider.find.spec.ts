@@ -48,6 +48,20 @@ describe('LocalStorageProvider', () => {
         ;
     });
 
+    it('sould not find not existing item', (done) => {
+      collection.save({
+        data: 'test data'
+      })
+        .then(res => collection.find('not-exists'))
+        .then(res => {
+
+          expect(res).toBeUndefined();
+
+          done();
+        })
+        ;
+    });
+
   });
 
 });

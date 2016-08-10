@@ -166,11 +166,9 @@ describe('LocalStorageProvider', () => {
         });
     });
 
-    it('should remove $id attr after passing identity attr', (done) => {
+    it('should not remove $id attr after passing identity attr', (done) => {
       collection.save(resource)
         .then(res => {
-
-          expect(res.$id).toBeDefined();
 
           res.id = '12';
           return collection.save(res);
@@ -180,6 +178,23 @@ describe('LocalStorageProvider', () => {
 
           expect(res).not.toBe(resource);
           expect(res.$id).toBeDefined();
+
+          done();
+        });
+    });
+
+    it('should update non-default index after passing identity attr', (done) => {
+      collection.saveAll([resource], '?a')
+        .then(res => {
+
+          res[0].id = '12';
+          return collection.save(res[0]);
+        })
+        .then(res => collection.findAll('?a'))
+        .then(res => {
+
+          expect(res[0].id).toBe('12');
+          expect(res[0].$id).toBeDefined();
 
           done();
         });

@@ -87,32 +87,6 @@ describe('LocalStorageProvider', () => {
         });
     });
 
-    it('should append 1 object in items', (done) => {
-
-      collection.saveAll([{ data: 'data1', }])
-        .then(() => collection.saveAll([{ data: 'data2', }]))
-        .then(res => {
-          let lsItems: ITestCollectionItem[] = JSON.parse(localStorage[`resource.${'test'}.items`]);
-
-          expect(lsItems.length).toBe(2);
-
-          done();
-        });
-    });
-
-    it('should append 1 object in index', (done) => {
-
-      collection.saveAll([{ data: 'data1', }])
-        .then(() => collection.saveAll([{ data: 'data2', }]))
-        .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
-
-          expect(lsIndex.length).toBe(2);
-
-          done();
-        });
-    });
-
     it('should remove 1 object in items', (done) => {
 
       collection.saveAll([
@@ -176,7 +150,7 @@ describe('LocalStorageProvider', () => {
         .then(res => {
           let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
 
-          expect(lsIndex.length).toBe(2);
+          expect(lsIndex.length).toBe(1);
 
           done();
         });
@@ -227,147 +201,57 @@ describe('LocalStorageProvider', () => {
         });
     });
 
-    // it('should save multiple objects in items', (done) => {
-    //   Promise.all([
-    //     collection.save({ data: 'data1' }),
-    //     collection.save({ data: 'data2' })
-    //   ])
-    //     .then(res => {
-    //       let lsItems: ITestCollectionItem[] = JSON.parse(localStorage[`resource.${'test'}.items`]);
+    it('should add object to default index while saving to multiple non-default indexes', (done) => {
+      collection.saveAll([{ data: 'dataA', }], '?a')
+        .then(items => collection.saveAll([{ data: 'dataB', }], '?b'))
+        .then(res => {
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndexA: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?a'];
+          let lsIndexB: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?b'];
 
-    //       expect(lsItems.length).toBe(2);
+          expect(lsIndex.length).toBe(2);
+          expect(lsIndexA.length).toBe(1);
+          expect(lsIndexB.length).toBe(1);
 
-    //       done();
-    //     });
-    // });
+          done();
+        });
+    });
 
-    // it('should save multiple objects in index', (done) => {
-    //   Promise.all([
-    //     collection.save({ data: 'data1' }),
-    //     collection.save({ data: 'data2' })
-    //   ])
-    //     .then(res => {
-    //       let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+    it('should add object to items while saving to multiple non-default indexes', (done) => {
+      collection.saveAll([{ data: 'dataA', }], '?a')
+        .then(items => collection.saveAll([{ data: 'dataB', }], '?b'))
+        .then(res => {
+          let lsItems: ITestCollectionItem[] = JSON.parse(localStorage[`resource.${'test'}.items`]);
 
-    //       expect(lsIndex.length).toBe(2);
+          expect(lsItems.length).toBe(2);
 
-    //       done();
-    //     });
-    // });
+          done();
+        });
+    });
 
-    // it('should mutate object passed as parameter', (done) => {
-    //   collection.save(resource)
-    //     .then(res => {
+    it('should remove object from default index while saving empty collection to non-default query', (done) => {
+      collection.saveAll([{ data: 'dataA', }], '?a')
+        .then(items => collection.saveAll([], '?a'))
+        .then(res => {
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
 
-    //       expect(res).toBe(resource);
+          expect(lsIndex.length).toBe(0);
 
-    //       done();
-    //     });
-    // });
+          done();
+        });
+    });
 
-    // it('should save $id for item w/o identity attr', (done) => {
-    //   collection.save(resource)
-    //     .then(res => {
+    it('should remove non-default index while saving empty collection to non-default query', (done) => {
+      collection.saveAll([{ data: 'dataA', }], '?a')
+        .then(items => collection.saveAll([], '?a'))
+        .then(res => {
+          let lsIndexA: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?a'];
 
-    //       expect(res.$id).toBeDefined();
-    //       expect(res.data).toBe(resource.data);
+          expect(lsIndexA).toBeUndefined();
 
-    //       done();
-    //     });
-    // });
-
-    // it('should not save $id for item w/ identity attr', (done) => {
-    //   resource.id = '12';
-    //   collection.save(resource)
-    //     .then(res => {
-
-    //       expect(res.$id).toBeUndefined();
-    //       expect(res.id).toBe('12');
-    //       expect(res.data).toBe(resource.data);
-
-    //       done();
-    //     });
-    // });
-
-    // it('should overwrite updated object in items', (done) => {
-    //   collection.save(resource)
-    //     .then(res => {
-    //       res.data = 'new data';
-    //       return collection.save(res);
-    //     })
-    //     .then(res => {
-    //       let lsItems: ITestCollectionItem[] = JSON.parse(localStorage[`resource.${'test'}.items`]);
-
-    //       expect(lsItems.length).toBe(1);
-
-    //       done();
-    //     });
-    // });
-
-    // it('should overwrite updated object in index', (done) => {
-    //   collection.save(resource)
-    //     .then(res => {
-    //       res.data = 'new data';
-    //       return collection.save(res);
-    //     })
-    //     .then(res => collection.find(resource.$id))
-    //     .then(res => {
-    //       let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
-
-    //       expect(lsIndex.length).toBe(1);
-
-    //       done();
-    //     });
-    // });
-
-    // it('should overwrite temp object after passing identity attr in items', (done) => {
-    //   collection.save(resource)
-    //     .then(res => {
-    //       res.id = '12';
-    //       return collection.save(res);
-    //     })
-    //     .then(res => {
-    //       let lsItems: ITestCollectionItem[] = JSON.parse(localStorage[`resource.${'test'}.items`]);
-
-    //       expect(lsItems.length).toBe(1);
-
-    //       done();
-    //     });
-    // });
-
-    // it('should overwrite temp object after passing identity attr in index', (done) => {
-    //   collection.save(resource)
-    //     .then(res => {
-    //       res.id = '12';
-    //       return collection.save(res);
-    //     })
-    //     .then(res => {
-    //       let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
-
-    //       expect(lsIndex.length).toBe(1);
-
-    //       done();
-    //     });
-    // });
-
-    // it('should remove $id attr after passing identity attr', (done) => {
-    //   collection.save(resource)
-    //     .then(res => {
-
-    //       expect(res.$id).toBeDefined();
-
-    //       res.id = '12';
-    //       return collection.save(res);
-    //     })
-    //     .then(res => collection.find('12'))
-    //     .then(res => {
-
-    //       expect(res).not.toBe(resource);
-    //       expect(res.$id).toBeUndefined();
-
-    //       done();
-    //     });
-    // });
+          done();
+        });
+    });
 
   });
 
