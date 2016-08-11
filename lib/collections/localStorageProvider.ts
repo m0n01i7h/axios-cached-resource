@@ -1,24 +1,24 @@
 import * as _ from 'lodash';
 import * as randomString from 'randomstring';
 
-import { Collection, ICollectionItem } from './collection';
+import { Collection, ICollection, ICollectionItem } from './collection';
 
-export class LocalStorageProvider<T extends ICollectionItem> extends Collection<T> {
+export class LocalStorageProvider<T extends ICollectionItem> extends Collection<T> implements ICollection<T> {
 
   /**
    * Get all items by index
    */
   public findAll(query: string | ((item: T) => boolean) = '?') {
     const items: T[]
-      = JSON.parse(localStorage.getItem(`resource.${this.collection}.items`) || '[]');
+      = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.items`) || '[]');
 
     if (_.isString(query)) {
     const identities: any[]
-      = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}')[query];
+      = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.index`) || '{}')[query];
 
     return Promise.resolve(identities
       ? items.filter(item => identities
-        .some(identity => (item[this.identity] && item[this.identity] === identity) || item.$id === identity))
+        .some(identity => (item[this.identityAttr] && item[this.identityAttr] === identity) || item.$id === identity))
       : []);
     } else {
       return Promise.resolve(items.filter(query));
@@ -28,10 +28,11 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
   /**
    * Get single item by local $id or identity attr.
    */
-  public find(identity: any): Promise<T> {
-    const items: T[] = JSON.parse(localStorage.getItem(`resource.${this.collection}.items`) || '[]');
-    return Promise.resolve(_(items)
-      .find(item => (item[this.identity] && item[this.identity] === identity) || item.$id === identity));
+  public find(identity?: any): Promise<T> {
+    const items: T[] = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.items`) || '[]');
+    return Promise.resolve(identity
+      ? _(items).find(item => (item[this.identityAttr] && item[this.identityAttr] === identity) || item.$id === identity)
+      : _(items).first());
   }
 
   /**
@@ -39,9 +40,9 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
    */
   public save(resource: T): Promise<T> {
     const index: { [key: string]: any[] }
-      = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}');
+      = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.index`) || '{}');
     const items: T[]
-      = JSON.parse(localStorage.getItem(`resource.${this.collection}.items`) || '[]');
+      = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.items`) || '[]');
     const identities = index['?'] = index['?'] || [];
 
     this.updateItems(resource, items);
@@ -52,13 +53,13 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
         if (
           query === '?' ||
           !_(identities)
-            .some(identity => (resource[this.identity] && resource[this.identity] === identity) || identity === resource.$id)
+            .some(identity => (resource[this.identityAttr] && resource[this.identityAttr] === identity) || identity === resource.$id)
         ) { return; }
         this.updateIndex(resource, identities);
     });
 
-    localStorage.setItem(`resource.${this.collection}.items`, JSON.stringify(items));
-    localStorage.setItem(`resource.${this.collection}.index`, JSON.stringify(index));
+    localStorage.setItem(`resource.${this.collectionName}.items`, JSON.stringify(items));
+    localStorage.setItem(`resource.${this.collectionName}.index`, JSON.stringify(index));
 
     return Promise.resolve(resource);
   }
@@ -68,9 +69,9 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
    */
   public saveAll(resources: T[], query = '?'): Promise<T[]> {
     const index: { [key: string]: any[] }
-      = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}');
+      = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.index`) || '{}');
     const items: T[]
-      = JSON.parse(localStorage.getItem(`resource.${this.collection}.items`) || '[]');
+      = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.items`) || '[]');
     const allIdentities = index['?'] = index['?'] || [];
     // identities by non-default query
     const identities = (query !== '?')
@@ -85,7 +86,7 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
 
       // remove all items not existing in passed resources
       _(items)
-        .remove(item => !_(resources).some((resource: T) => (resource[this.identity] && resource[this.identity] === item[this.identity]) || resource.$id === item.$id))
+        .remove(item => !_(resources).some((resource: T) => (resource[this.identityAttr] && resource[this.identityAttr] === item[this.identityAttr]) || resource.$id === item.$id))
         .commit();
     } else {
 
@@ -101,7 +102,7 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
 
       // remove all not indexed items
       _(items)
-        .remove(item => !_(indexedIdentities).some(identity => (item[this.identity] && item[this.identity] === identity) || identity === item.$id))
+        .remove(item => !_(indexedIdentities).some(identity => (item[this.identityAttr] && item[this.identityAttr] === identity) || identity === item.$id))
         .commit();
 
       // remove all non indexed identities
@@ -127,8 +128,8 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
       delete index[query];
     }
 
-    localStorage.setItem(`resource.${this.collection}.items`, JSON.stringify(items));
-    localStorage.setItem(`resource.${this.collection}.index`, JSON.stringify(index));
+    localStorage.setItem(`resource.${this.collectionName}.items`, JSON.stringify(items));
+    localStorage.setItem(`resource.${this.collectionName}.index`, JSON.stringify(index));
 
     return Promise.resolve(resources);
   }
@@ -138,13 +139,13 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
    */
   public remove(identity: any): Promise<void> {
     const index: { [key: string]: any[] }
-      = JSON.parse(localStorage.getItem(`resource.${this.collection}.index`) || '{}');
+      = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.index`) || '{}');
     const items: T[]
-      = JSON.parse(localStorage.getItem(`resource.${this.collection}.items`) || '[]');
+      = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.items`) || '[]');
 
     // remove from items
     _(items)
-      .remove(item => (item[this.identity] && item[this.identity] === identity) || item.$id === identity)
+      .remove(item => (item[this.identityAttr] && item[this.identityAttr] === identity) || item.$id === identity)
       .commit();
 
     // remove from all indexes
@@ -162,8 +163,8 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
         delete index[key];
       });
 
-    localStorage.setItem(`resource.${this.collection}.items`, JSON.stringify(items));
-    localStorage.setItem(`resource.${this.collection}.index`, JSON.stringify(index));
+    localStorage.setItem(`resource.${this.collectionName}.items`, JSON.stringify(items));
+    localStorage.setItem(`resource.${this.collectionName}.index`, JSON.stringify(index));
 
     return Promise.resolve();
   }
@@ -174,7 +175,7 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
   private updateItems(resource: T, collecttion: T[]) {
     // update existing item create or create new
     let item = _(collecttion).find(item =>
-      (item[this.identity] && item[this.identity] === resource[this.identity]) || item.$id === resource.$id);
+      (item[this.identityAttr] && item[this.identityAttr] === resource[this.identityAttr]) || item.$id === resource.$id);
 
     if (!item) {
       collecttion.push(resource);
@@ -192,8 +193,8 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
    */
   private updateIndex(resource: T, identities: any[]) {
     _(identities).remove(identity =>
-      (resource[this.identity] && resource[this.identity] === identity) || identity === resource.$id).commit();
-    identities.push(resource[this.identity] || resource.$id);
+      (resource[this.identityAttr] && resource[this.identityAttr] === identity) || identity === resource.$id).commit();
+    identities.push(resource[this.identityAttr] || resource.$id);
   }
 
 }

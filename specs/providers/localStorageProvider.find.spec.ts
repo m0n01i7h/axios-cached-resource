@@ -48,6 +48,26 @@ describe('LocalStorageProvider', () => {
         ;
     });
 
+    it('sould find first item if identity not passed', (done) => {
+      collection.saveAll([
+        {
+          data: 'data1'
+        },
+        {
+          data: 'data2'
+        }
+      ])
+        .then(res => collection.find())
+        .then(res => {
+
+          expect(res).toBeDefined();
+          expect(res.data).toBeDefined();
+
+          done();
+        })
+        ;
+    });
+
     it('sould not find not existing item', (done) => {
       collection.save({
         data: 'test data'

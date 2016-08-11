@@ -1,5 +1,5 @@
 
-import { Collection, ICollectionItem } from './collections/collection';
+import { ICollection, ICollectionItem } from './collections/collection';
 
 import { IActionOptions } from './action';
 
@@ -31,7 +31,7 @@ export interface IResourceOptions {
   /**
    * Driver for saving cached resource locally.
    */
-  CollectionClass?: (new (collection: string, identity: string) => Collection<any>);
+  CollectionClass?: (new (collectionName: string, identityAttr: string) => ICollection<any>);
 }
 
 
@@ -39,14 +39,14 @@ export interface IResourceOptions {
 export interface IResourceMetadata {
   options?: IResourceOptions;
   actions?: { [key: string]: IActionOptions };
-  collection: Collection<ICollectionItem>;
+  collection: ICollection<ICollectionItem>;
 }
 
 export function Resource(options: IResourceOptions): ClassDecorator {
   return (target: any) => {
-    let metadata: IResourceMetadata
-      = target.__resource__ = target.__resource__ || {};
+    let metadata: IResourceMetadata = target.$resource = target.$resource || {}; // static property
+
     metadata.options = options;
-    metadata.collection = new options.CollectionClass(options.collection, options.identity);
+    metadata.collection = target.prototype.$collection = new options.CollectionClass(options.collection, options.identity);
   };
 }

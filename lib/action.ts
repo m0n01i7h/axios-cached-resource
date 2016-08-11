@@ -49,8 +49,7 @@ export function Action(options: IActionOptions): PropertyDecorator {
   }
 
   return (target: any, key: string) => {
-    const metadata: IResourceMetadata
-      = target.constructor.__resource__ = target.constructor.__resource__ || {};
+    const metadata: IResourceMetadata = target.constructor.$resource = target.constructor.$resource || {}; // static property
 
     metadata.actions = metadata.actions || {};
     metadata.actions[key] = options;
