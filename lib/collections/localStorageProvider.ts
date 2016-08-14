@@ -8,7 +8,7 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
   /**
    * Get all items by index
    */
-  public findAll(query: string | ((item: T) => boolean) = '?') {
+  public findAll(query: string | ((item: T) => boolean) = '/') {
     const items: T[]
       = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.items`) || '[]');
 
@@ -43,7 +43,7 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
       = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.index`) || '{}');
     const items: T[]
       = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.items`) || '[]');
-    const identities = index['?'] = index['?'] || [];
+    const identities = index['/'] = index['/'] || [];
 
     this.updateItems(resource, items);
     this.updateIndex(resource, identities);
@@ -51,7 +51,7 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
     // update all non-default indexes where this resource indexed
     _(index).each((identities: any[], query: string) => {
         if (
-          query === '?' ||
+          query === '/' ||
           !_(identities)
             .some(identity => (resource[this.identityAttr] && resource[this.identityAttr] === identity) || identity === resource.$id)
         ) { return; }
@@ -67,20 +67,20 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
   /**
    * Update or create all items and indexes
    */
-  public saveAll(resources: T[], query = '?'): Promise<T[]> {
+  public saveAll(resources: T[], query = '/'): Promise<T[]> {
     const index: { [key: string]: any[] }
       = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.index`) || '{}');
     const items: T[]
       = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.items`) || '[]');
-    const allIdentities = index['?'] = index['?'] || [];
+    const allIdentities = index['/'] = index['/'] || [];
     // identities by non-default query
-    const identities = (query !== '?')
+    const identities = (query !== '/')
       ? index[query] = []
       : null;
 
     // compact
 
-    if (query === '?') {
+    if (query === '/') {
 
       allIdentities.splice(0);
 
@@ -93,7 +93,7 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
       let indexedIdentities = [];
 
       _(index).each((identities: any[], query: string) => {
-        if (query === '?') { return; }
+        if (query === '/') { return; }
 
         indexedIdentities.push(...identities);
       });
@@ -159,7 +159,7 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
     _(index)
       .keys()
       .forEach(key => {
-        if (key === '?' || index[key].length) { return; }
+        if (key === '/' || index[key].length) { return; }
         delete index[key];
       });
 

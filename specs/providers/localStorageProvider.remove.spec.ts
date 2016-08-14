@@ -60,7 +60,7 @@ describe('LocalStorageProvider', () => {
         }))
         .then(() => collection.remove('12'))
         .then(() => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(1);
           done();
@@ -77,7 +77,7 @@ describe('LocalStorageProvider', () => {
         }))
         .then(item => collection.remove(item.$id))
         .then(() => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(1);
           done();
@@ -93,10 +93,10 @@ describe('LocalStorageProvider', () => {
         {
           id: '13',
           data: 'data13'
-        }], '?a')
+        }], '/a')
         .then(res => collection.remove('12'))
         .then(() => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?a'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/a'];
 
           expect(lsIndex.length).toBe(1);
           done();
@@ -110,10 +110,10 @@ describe('LocalStorageProvider', () => {
         },
         {
           data: 'data13'
-        }], '?a')
+        }], '/a')
         .then(res => collection.remove(res[0].$id))
         .then(() => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?a'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/a'];
 
           expect(lsIndex.length).toBe(1);
           done();
@@ -124,10 +124,10 @@ describe('LocalStorageProvider', () => {
       collection.saveAll([
         {
           data: 'data13'
-        }], '?a')
+        }], '/a')
         .then(res => collection.remove(res[0].$id))
         .then(() => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?a'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/a'];
 
           expect(lsIndex).toBeUndefined();
           done();
@@ -167,7 +167,7 @@ describe('LocalStorageProvider', () => {
         }])
         .then(res => collection.remove())
         .then(() => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(0);
           done();

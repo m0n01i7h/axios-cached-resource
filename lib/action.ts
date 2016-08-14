@@ -27,11 +27,6 @@ export interface IActionOptions {
   isArray?: boolean;
 
   /**
-   * Use identity value from params
-   */
-  setIdentityFromParams?: boolean;
-
-  /**
    * Should query skip http request
    */
   localOnly?: boolean;
@@ -101,6 +96,7 @@ export function Action(options: IActionOptions): PropertyDecorator {
         method: options.method,
         url: url,
         // pass all params not passed to url as query string
+        data: omitMetaData(request.data),
         params: _({})
           .assign(request.params)
           .omit(_.keys(route.match(url)))
@@ -110,13 +106,11 @@ export function Action(options: IActionOptions): PropertyDecorator {
       resource.$resource = this;
 
       if (options.method === 'get') {
-        resource.$pending = 'find';
-
         if (!options.httpOnly) {
           resource.$promise = options.isArray
 
             ? metadata.collection
-              .findAll(`${qs.stringify(request.params, { encode: false })}`)
+              .findAll(request.url)
               .then(items => {
                 if (!resource.$pending) { return; }
                 _.pullAll(resource as [], items);
@@ -124,15 +118,16 @@ export function Action(options: IActionOptions): PropertyDecorator {
               })
 
             : metadata.collection
-              .find(request.params[metadata.options.identityAttr])
+              .findAll(request.url)
               .then(item => {
                 if (!resource.$pending) { return; }
-                _.assign(resource, item);
+                _.assign(resource, item[0] || {});
                 return resource;
               });
         }
 
         if (!options.localOnly) {
+          resource.$pending = 'find';
           resource.$httpPromise = options.isArray
 
             ? axios.request<{}[]>(request as Axios.AxiosXHRConfig<{}[]>)
@@ -194,7 +189,7 @@ export function Delete(options: IActionOptions = {}): PropertyDecorator {
 /**
  * Removes all localOnly and metadata values
  */
-function omitMetaData(resource: {}) {
+function omitMetaData(resource: {} = {}) {
   return _({})
     .assign(resource)
     .omit(_.keys(resource).filter(key => _(key).startsWith('$')))

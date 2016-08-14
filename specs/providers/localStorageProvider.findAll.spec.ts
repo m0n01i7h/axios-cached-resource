@@ -39,8 +39,8 @@ describe('LocalStorageProvider', () => {
         {
           data: 'data2'
         }
-      ], '?a')
-        .then(res => collection.findAll('?a'))
+      ], '/a')
+        .then(res => collection.findAll('/a'))
         .then(res => {
 
           expect(res.length).toBe(2);
@@ -58,7 +58,7 @@ describe('LocalStorageProvider', () => {
         {
           data: 'data2'
         }
-      ], '?a')
+      ], '/a')
         .then(res => collection.findAll())
         .then(res => {
 
@@ -77,8 +77,8 @@ describe('LocalStorageProvider', () => {
         {
           data: 'data2'
         }
-      ], '?a')
-        .then(res => collection.findAll('?b'))
+      ], '/a')
+        .then(res => collection.findAll('/b'))
         .then(res => {
 
           expect(res.length).toBe(0);

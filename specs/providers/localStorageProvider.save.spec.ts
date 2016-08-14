@@ -35,7 +35,7 @@ describe('LocalStorageProvider', () => {
     it('should save 1 object in index', (done) => {
       collection.save(resource)
         .then(res => {
-          let lsIndex: ITestCollectionItem[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: ITestCollectionItem[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(1);
 
@@ -63,7 +63,7 @@ describe('LocalStorageProvider', () => {
         collection.save({ data: 'data2' })
       ])
         .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(2);
 
@@ -128,7 +128,7 @@ describe('LocalStorageProvider', () => {
         })
         .then(res => collection.find(resource.$id))
         .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(1);
 
@@ -158,7 +158,7 @@ describe('LocalStorageProvider', () => {
           return collection.save(res);
         })
         .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(1);
 
@@ -184,13 +184,13 @@ describe('LocalStorageProvider', () => {
     });
 
     it('should update non-default index after passing identity attr', (done) => {
-      collection.saveAll([resource], '?a')
+      collection.saveAll([resource], '/a')
         .then(res => {
 
           res[0].id = '12';
           return collection.save(res[0]);
         })
-        .then(res => collection.findAll('?a'))
+        .then(res => collection.findAll('/a'))
         .then(res => {
 
           expect(res[0].id).toBe('12');

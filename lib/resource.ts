@@ -11,18 +11,27 @@ export interface IResource<T> {
 }
 
 export interface IResourceOptions {
+
   /**
    * Url to resource
    */
   url: string;
+
+  /**
+   * Actions
+   */
+  actions?: { [key: string]: IActionOptions }
+
   /**
    * Identity attribute
    */
   identityAttr: string;
+
   /**
    * Name of collection
    */
-  collection: string;
+  collectionName: string;
+
   /**
    * Override axios base url
    */
@@ -47,6 +56,6 @@ export function Resource(options: IResourceOptions): ClassDecorator {
     let metadata: IResourceMetadata = target.$$resource = target.$$resource || {}; // static property
 
     metadata.options = options;
-    metadata.collection = target.prototype.$collection = new options.CollectionClass(options.collection, options.identityAttr);
+    metadata.collection = target.prototype.$collection = new options.CollectionClass(options.collectionName, options.identityAttr);
   };
 }

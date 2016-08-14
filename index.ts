@@ -13,32 +13,15 @@ interface IBooks extends Array<IBook>, IResource<IBooks> {
 }
 
 @Resource({
-  url: '/api/books(/:bookId)',
+  url: '/api/books(/:_id)',
   identityAttr: '_id',
-  collection: 'books'
+  collectionName: 'books',
+  actions: {
+    get: { method: 'get' },
+    fromCache: { method: 'get', localOnly: true }
+  }
 })
-class BooksResource {
-
-  @Get({ isArray: true })
-  public query: () => IResource<IBook[]>;
-
-  @Get()
-  public get: (params: { bookId: any }) => IResource<IBook>;
-
-  @Post()
-  public save: (book: IBook) => IResource<IBook>;
-
-  @Put()
-  public update: (book: IBook) => IResource<IBook>;
-
-  @Delete()
-  public remove: (params: { bookId: any }) => IResource<void>;
-
-  @Get({
-    url: '/api/books/:bookId/pages/:pageNo'
-  })
-  public $page: (params: { bookId: any, pageNo: number }) => IResource<{}>;
-}
+class BooksResource { }
 
 interface IUser {
   uuid: any;
@@ -49,14 +32,11 @@ interface IUser {
 @Resource({
   url: '/api/user',
   identityAttr: 'uuid',
-  collection: 'userProfile'
+  collectionName: 'userProfile',
+  actions: {
+    get: { method: 'get' },
+    fromCache: { method: 'get', localOnly: true },
+    save: { method: 'put' },
+  }
 })
-class UserProfile {
-
-  @Get()
-  public get: () => IResource<IUser>;
-
-  @Put()
-  public save: (user: IUser) => IResource<IBook>;
-
-}
+class UserProfile { }

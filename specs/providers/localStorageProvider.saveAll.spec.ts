@@ -45,7 +45,7 @@ describe('LocalStorageProvider', () => {
 
       collection.saveAll(items)
         .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(1);
 
@@ -79,7 +79,7 @@ describe('LocalStorageProvider', () => {
 
       collection.saveAll(items)
         .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(2);
 
@@ -119,7 +119,7 @@ describe('LocalStorageProvider', () => {
           return collection.saveAll(items);
         })
         .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(2);
 
@@ -148,7 +148,7 @@ describe('LocalStorageProvider', () => {
       collection.saveAll([{ data: 'data1', }])
         .then(() => collection.saveAll([{ data: 'data2', }]))
         .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(1);
 
@@ -157,7 +157,7 @@ describe('LocalStorageProvider', () => {
     });
 
     it('should add 1 object to items with non-default query', (done) => {
-      collection.saveAll([{ data: 'data1', }], '?a')
+      collection.saveAll([{ data: 'data1', }], '/a')
         .then(items => {
           items[0].data = 'data2';
           return collection.saveAll(items);
@@ -172,13 +172,13 @@ describe('LocalStorageProvider', () => {
     });
 
     it('should add 1 object to index with non-default query', (done) => {
-      collection.saveAll([{ data: 'data1', }], '?a')
+      collection.saveAll([{ data: 'data1', }], '/a')
         .then(items => {
           items[0].data = 'data2';
           return collection.saveAll(items);
         })
         .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?a'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/a'];
 
           expect(lsIndex.length).toBe(1);
 
@@ -187,13 +187,13 @@ describe('LocalStorageProvider', () => {
     });
 
     it('should add 1 object to default index with non-default query', (done) => {
-      collection.saveAll([{ data: 'data1', }], '?a')
+      collection.saveAll([{ data: 'data1', }], '/a')
         .then(items => {
           items[0].data = 'data2';
           return collection.saveAll(items);
         })
         .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(1);
 
@@ -202,12 +202,12 @@ describe('LocalStorageProvider', () => {
     });
 
     it('should add object to default index while saving to multiple non-default indexes', (done) => {
-      collection.saveAll([{ data: 'dataA', }], '?a')
-        .then(items => collection.saveAll([{ data: 'dataB', }], '?b'))
+      collection.saveAll([{ data: 'dataA', }], '/a')
+        .then(items => collection.saveAll([{ data: 'dataB', }], '/b'))
         .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
-          let lsIndexA: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?a'];
-          let lsIndexB: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?b'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
+          let lsIndexA: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/a'];
+          let lsIndexB: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/b'];
 
           expect(lsIndex.length).toBe(2);
           expect(lsIndexA.length).toBe(1);
@@ -218,8 +218,8 @@ describe('LocalStorageProvider', () => {
     });
 
     it('should add object to items while saving to multiple non-default indexes', (done) => {
-      collection.saveAll([{ data: 'dataA', }], '?a')
-        .then(items => collection.saveAll([{ data: 'dataB', }], '?b'))
+      collection.saveAll([{ data: 'dataA', }], '/a')
+        .then(items => collection.saveAll([{ data: 'dataB', }], '/b'))
         .then(res => {
           let lsItems: ITestCollectionItem[] = JSON.parse(localStorage[`resource.${'test'}.items`]);
 
@@ -230,10 +230,10 @@ describe('LocalStorageProvider', () => {
     });
 
     it('should remove object from default index while saving empty collection to non-default query', (done) => {
-      collection.saveAll([{ data: 'dataA', }], '?a')
-        .then(items => collection.saveAll([], '?a'))
+      collection.saveAll([{ data: 'dataA', }], '/a')
+        .then(items => collection.saveAll([], '/a'))
         .then(res => {
-          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/'];
 
           expect(lsIndex.length).toBe(0);
 
@@ -242,10 +242,10 @@ describe('LocalStorageProvider', () => {
     });
 
     it('should remove non-default index while saving empty collection to non-default query', (done) => {
-      collection.saveAll([{ data: 'dataA', }], '?a')
-        .then(items => collection.saveAll([], '?a'))
+      collection.saveAll([{ data: 'dataA', }], '/a')
+        .then(items => collection.saveAll([], '/a'))
         .then(res => {
-          let lsIndexA: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?a'];
+          let lsIndexA: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['/a'];
 
           expect(lsIndexA).toBeUndefined();
 

@@ -12,7 +12,7 @@ describe('Lodash', () => {
       { id: '17' },
       { id: '10', name: 'mo' },
     ];
-    console.log(_.find(arr, _.pickBy(route.match('?name=mo'), _.identity)));
+    console.log(_.find(arr, _.pickBy(route.match('/name=mo'), _.identity)));
     _.remove(arr, _.pickBy(route.match('/10'), _.identity));
     expect(arr.length).toEqual(3);
   });
