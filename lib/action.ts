@@ -24,7 +24,7 @@ export interface IActionOptions {
   /**
    * Is Response contain array of resources
    */
-  isCollection?: boolean;
+  isArray?: boolean;
 
   /**
    * Use identity value from params
@@ -42,97 +42,126 @@ export interface IActionOptions {
   httpOnly?: boolean;
 }
 
+class Request {
+  constructor(
+    private options: IActionOptions,
+    private resource: IResourceMetadata,
+    private actionName: string
+  ) { }
+
+  public invoke(request: Axios.AxiosXHRConfig<{}>) {
+
+  }
+
+  private get(request: Axios.AxiosXHRConfig<{}>) {
+
+  }
+
+  private post(request: Axios.AxiosXHRConfig<{}>) {
+
+  }
+
+  private put(request: Axios.AxiosXHRConfig<{}>) {
+
+  }
+
+  private delete(request: Axios.AxiosXHRConfig<{}>) {
+
+  }
+}
+
 export function Action(options: IActionOptions): PropertyDecorator {
 
   if (!options.method) {
-    throw `options.method missing`;
+    throw `options.method missed`;
   }
 
   return (target: any, key: string) => {
-    const metadata: IResourceMetadata = target.constructor.$resource = target.constructor.$resource || {}; // static property
+    const metadata: IResourceMetadata = target.constructor.$$resource = target.constructor.$$resource || {}; // static property
 
     metadata.actions = metadata.actions || {};
     metadata.actions[key] = options;
 
-    target[key] = (params: {}, data: {}, config: Axios.AxiosXHRConfig<{}> = {
-      url: metadata.options.url,
-      baseURL: metadata.options.baseUrl
+    target[key] = (request: Axios.AxiosXHRConfig<{}> = {
+      url: options.url || metadata.options.url,
     }): IResourceCollection | IResourceCollectionItem => {
 
-      const resource: IResourceCollection | IResourceCollectionItem = options.isCollection ? [] : {};
-      const route = new Route(options.url);
-      const url = route.reverse(params);
-      const request = _.assign({}, config, {
+      const defaults: Axios.AxiosXHRConfig<{}> = {
+        url: options.url || metadata.options.url,
+        params: {}
+      };
+
+      request = _.defaults(request, defaults) as Axios.AxiosXHRConfig<{}>;
+
+      const resource: IResourceCollection | IResourceCollectionItem = options.isArray ? [] : {};
+      const route = new Route(request.url);
+      const url = route.reverse(request.params);
+
+      request = _.assign(request, {
         method: options.method,
         url: url,
-        data: data,
+        // pass all params not passed to url as query string
         params: _({})
-          .assign(params)
+          .assign(request.params)
           .omit(_.keys(route.match(url)))
-          .value() // without values passed as url params
-      } as Axios.AxiosXHRConfig<{}>);
+          .value()
+      }) as Axios.AxiosXHRConfig<{}>;
 
-      if (options.method === 'get' && options.isCollection) {
-
-        resource.$resource = this;
-        resource.$pending = 'find';
-
-        resource.$promise = metadata.collection.findAll(`?${qs.stringify(params)}`)
-          .then(items => {
-            return items;
-          });
-
-        resource.$httpPromise = axios.request(request as Axios.AxiosXHRConfig<{}[]>)
-          .then(res => metadata.collection.saveAll(res.data, `?${qs.stringify(params)}`))
-          .then(items => {
-            delete resource.$pending;
-            return resource;
-          });
-
-        return resource;
-      }
+      resource.$resource = this;
 
       if (options.method === 'get') {
-
-        resource.$resource = this;
         resource.$pending = 'find';
 
-        resource.$promise = metadata.collection.find(params[metadata.options.identity])
-          .then(item => {
-            // avoid overwriting with local data
-            if (resource.$pending) {
-              _.assign(resource, item);
-            }
-            return resource;
-          });
+        if (!options.httpOnly) {
+          resource.$promise = options.isArray
 
-        resource.$httpPromise = axios.request(request as Axios.AxiosXHRConfig<{}>)
-          .then(res => metadata.collection.save(res.data))
-          .then(item => {
-            _.assign(resource, item);
-            delete resource.$pending;
-            return resource;
-          });
+            ? metadata.collection
+              .findAll(`${qs.stringify(request.params, { encode: false })}`)
+              .then(items => {
+                if (!resource.$pending) { return; }
+                _.pullAll(resource as [], items);
+                return resource;
+              })
+
+            : metadata.collection
+              .find(request.params[metadata.options.identityAttr])
+              .then(item => {
+                if (!resource.$pending) { return; }
+                _.assign(resource, item);
+                return resource;
+              });
+        }
+
+        if (!options.localOnly) {
+          resource.$httpPromise = options.isArray
+
+            ? axios.request<{}[]>(request as Axios.AxiosXHRConfig<{}[]>)
+              .then(res => {
+                return res.data;
+              })
+
+            : axios.request<{}>(request as Axios.AxiosXHRConfig<{}>)
+              .then(res => {
+                return res.data;
+              });
+        }
 
         return resource;
       }
 
       if (options.method === 'post') {
-        resource.$resource = this;
         resource.$pending = 'save';
 
         return resource;
       }
 
       if (options.method === 'put') {
-        resource.$resource = this;
         resource.$pending = 'update';
 
         return resource;
       }
 
       if (options.method === 'delete') {
-        resource.$resource = this;
         resource.$pending = 'remove';
 
         return resource;

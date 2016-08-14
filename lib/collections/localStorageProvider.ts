@@ -137,7 +137,7 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
   /**
    * Removes resource from items and all indexes
    */
-  public remove(identity: any): Promise<void> {
+  public remove(identity?: any): Promise<void> {
     const index: { [key: string]: any[] }
       = JSON.parse(localStorage.getItem(`resource.${this.collectionName}.index`) || '{}');
     const items: T[]
@@ -145,13 +145,13 @@ export class LocalStorageProvider<T extends ICollectionItem> extends Collection<
 
     // remove from items
     _(items)
-      .remove(item => (item[this.identityAttr] && item[this.identityAttr] === identity) || item.$id === identity)
+      .remove(item => !identity || (item[this.identityAttr] && item[this.identityAttr] === identity) || item.$id === identity)
       .commit();
 
     // remove from all indexes
     _(index).each((identities: any[]) => {
       _(identities)
-        .remove(id => identity === id)
+        .remove(id => !identity || identity === id)
         .commit();
     });
 

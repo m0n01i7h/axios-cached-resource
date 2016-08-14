@@ -16,6 +16,7 @@ export interface ICollection<T extends ICollectionItem> {
   saveAll(items: T[]): Promise<T[]>;
   saveAll(items: T[], index: string): Promise<T[]>;
 
+  remove(): Promise<void>;
   remove(identity: any): Promise<void>;
 }
 

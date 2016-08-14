@@ -18,7 +18,7 @@ export interface IResourceOptions {
   /**
    * Identity attribute
    */
-  identity: string;
+  identityAttr: string;
   /**
    * Name of collection
    */
@@ -44,9 +44,9 @@ export interface IResourceMetadata {
 
 export function Resource(options: IResourceOptions): ClassDecorator {
   return (target: any) => {
-    let metadata: IResourceMetadata = target.$resource = target.$resource || {}; // static property
+    let metadata: IResourceMetadata = target.$$resource = target.$$resource || {}; // static property
 
     metadata.options = options;
-    metadata.collection = target.prototype.$collection = new options.CollectionClass(options.collection, options.identity);
+    metadata.collection = target.prototype.$collection = new options.CollectionClass(options.collection, options.identityAttr);
   };
 }

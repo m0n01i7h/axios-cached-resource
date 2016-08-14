@@ -14,28 +14,49 @@ interface IBooks extends Array<IBook>, IResource<IBooks> {
 
 @Resource({
   url: '/api/books(/:bookId)',
-  identity: '_id',
+  identityAttr: '_id',
   collection: 'books'
 })
 class BooksResource {
 
-  @Get({ isCollection: true })
+  @Get({ isArray: true })
   public query: () => IResource<IBook[]>;
 
   @Get()
   public get: (params: { bookId: any }) => IResource<IBook>;
 
   @Post()
-  public save: (params: {}, data: IBook) => IResource<IBook>;
+  public save: (book: IBook) => IResource<IBook>;
 
   @Put()
-  public $update: (params: {}, data: IBook) => IResource<IBook>;
+  public update: (book: IBook) => IResource<IBook>;
 
   @Delete()
-  public remove: (params: { bookId: any }, data: IBook) => IResource<IBook>;
+  public remove: (params: { bookId: any }) => IResource<void>;
 
   @Get({
     url: '/api/books/:bookId/pages/:pageNo'
   })
   public $page: (params: { bookId: any, pageNo: number }) => IResource<{}>;
+}
+
+interface IUser {
+  uuid: any;
+  firstName: string;
+  lastName: string;
+}
+
+@Resource({
+  url: '/api/user',
+  identityAttr: 'uuid',
+  collection: 'userProfile'
+})
+class UserProfile {
+
+  @Get()
+  public get: () => IResource<IUser>;
+
+  @Put()
+  public save: (user: IUser) => IResource<IBook>;
+
 }

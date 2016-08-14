@@ -134,6 +134,46 @@ describe('LocalStorageProvider', () => {
         });
     });
 
+    it('should remove all from items if no params passed', (done) => {
+      collection.saveAll([
+        {
+          data: 'data1'
+        },
+        {
+          data: 'data2'
+        },
+        {
+          data: 'data2'
+        }])
+        .then(res => collection.remove())
+        .then(() => {
+          let lsItems: ITestCollectionItem[] = JSON.parse(localStorage[`resource.${'test'}.items`]);
+
+          expect(lsItems.length).toBe(0);
+          done();
+        });
+    });
+
+    it('should remove all from default index if no params passed', (done) => {
+      collection.saveAll([
+        {
+          data: 'data1'
+        },
+        {
+          data: 'data2'
+        },
+        {
+          data: 'data2'
+        }])
+        .then(res => collection.remove())
+        .then(() => {
+          let lsIndex: any[] = JSON.parse(localStorage[`resource.${'test'}.index`])['?'];
+
+          expect(lsIndex.length).toBe(0);
+          done();
+        });
+    });
+
   });
 
 });
